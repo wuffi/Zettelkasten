@@ -93,7 +93,8 @@
 
         <jar destfile="${store.dir}/temp_final.jar" filesetmanifest="skip">
             <zipgroupfileset dir="dist" includes="*.jar"/>
-            <zipgroupfileset dir="dist/lib" includes="*.jar"/>
+            <zipgroupfileset dir="dist/lib" includes="*.jar"
+            excludes="jdom.jar, opencsv.jar"/>
 
             <manifest>
                 <attribute name="Main-Class" value="${main.class}"/>
