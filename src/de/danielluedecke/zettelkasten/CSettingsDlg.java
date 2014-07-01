@@ -33,10 +33,6 @@
 
 package de.danielluedecke.zettelkasten;
 
-import at.jta.Key;
-import at.jta.NotSupportedOSException;
-import at.jta.RegistryErrorException;
-import at.jta.Regor;
 import de.danielluedecke.zettelkasten.database.AutoKorrektur;
 import de.danielluedecke.zettelkasten.database.Daten;
 import de.danielluedecke.zettelkasten.database.Settings;
@@ -328,7 +324,6 @@ public class CSettingsDlg extends javax.swing.JDialog {
         // init formatted textfields with resize-preferences
         jFormattedTextFieldImgWidth.setValue(settings.getImageResizeWidth());
         jFormattedTextFieldImgHeight.setValue(settings.getImageResizeHeight());
-        jCheckBoxRegistry.setSelected(initRegCheckBox());
         // get value for cell spacing
         Dimension cellspacing = settings.getCellSpacing();
         jSpinnerDistHor.setValue(cellspacing.width);
@@ -1106,62 +1101,6 @@ public class CSettingsDlg extends javax.swing.JDialog {
         userPathChanges = true;
     }
 
-
-    private boolean initRegCheckBox() {
-        try {
-            Regor winreg = new Regor();
-            return (winreg.openKey(Regor.HKEY_CLASSES_ROOT, ".zkn3")!=null && winreg.openKey(Regor.HKEY_CLASSES_ROOT, "zkn3_auto_file\\shell\\Open\\command")!=null);
-        }
-        catch (RegistryErrorException e) {
-            Constants.zknlogger.log(Level.SEVERE,e.getLocalizedMessage());
-        }
-        catch (NotSupportedOSException e) {
-            Constants.zknlogger.log(Level.WARNING,e.getLocalizedMessage());
-        }
-        return false;
-    }
-
-    private void registerFileExtension() {
-        try {
-            Regor winreg = new Regor();
-            if (jCheckBoxRegistry.isSelected()) {
-                Key regkey = winreg.openKey(Regor.HKEY_CLASSES_ROOT, ".zkn3");
-                if (null==regkey) {
-                    regkey = winreg.createKey(Regor.HKEY_CLASSES_ROOT, ".zkn3");
-                    winreg.closeKey(regkey);
-                    regkey = winreg.openKey(Regor.HKEY_CLASSES_ROOT, ".zkn3");
-
-                }
-                if (regkey!=null) {
-                    winreg.setValue(regkey, "", "zkn3_auto_file");
-                    winreg.closeKey(regkey);
-                    regkey = winreg.openKey(Regor.HKEY_CLASSES_ROOT, "zkn3_auto_file\\shell\\Open\\command");
-                    if (null==regkey) {
-                        regkey = winreg.createKey(Regor.HKEY_CLASSES_ROOT, "zkn3_auto_file\\shell\\Open\\command");
-                        winreg.closeKey(regkey);
-                        regkey = winreg.openKey(Regor.HKEY_CLASSES_ROOT, "zkn3_auto_file\\shell\\Open\\command");
-                    }
-                    if (regkey!=null) {
-                        winreg.setValue(regkey, "", "\""+System.getProperty("java.class.path")+"\" \"%1\"");
-                        winreg.closeKey(regkey);
-                    }
-                }
-            }
-            else {
-                winreg.delKey(Regor.HKEY_CLASSES_ROOT, ".zkn3");
-                winreg.delKey(Regor.HKEY_CLASSES_ROOT, "zkn3_auto_file\\shell\\Open\\command");
-            }
-        }
-        catch (RegistryErrorException e) {
-            Constants.zknlogger.log(Level.SEVERE,e.getLocalizedMessage());
-            // show warning message box
-            JOptionPane.showMessageDialog(null, resourceMap.getString("errorRegistryMsg"), resourceMap.getString("errorRegistryTitle"), JOptionPane.PLAIN_MESSAGE);
-        }
-        catch (NotSupportedOSException e) {
-            Constants.zknlogger.log(Level.WARNING,e.getLocalizedMessage());
-        }
-    }
-
     
     /**
      * This method creates a string-description for the font-settings, which are used
@@ -1515,7 +1454,6 @@ public class CSettingsDlg extends javax.swing.JDialog {
         }
         catch (NumberFormatException e) { }
         // check whether changes to winreg have been made
-        if (registryChanges) registerFileExtension();
         // save all the settings
         int selectedlaf = jComboBoxLAF.getSelectedIndex();
         String laf = (selectedlaf>=installed_laf.length) ? Constants.seaGlassLookAndFeelClassName : installed_laf[jComboBoxLAF.getSelectedIndex()].getClassName();
